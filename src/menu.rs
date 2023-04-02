@@ -15,12 +15,19 @@ impl Plugin for MenuPlugin {
                 prepare_menu,
                 menu_header,
                 main_menu.in_set(OnUpdate(AppState::MainMenu)),
+                #[cfg(not(target_arch = "wasm32"))]
                 exit_button,
                 draw_menu,
             )
                 .chain(),
         );
     }
+}
+
+#[derive(PartialEq)]
+enum FocusLabel {
+    Start,
+    Exit,
 }
 
 #[derive(Resource, Default)]
@@ -67,12 +74,13 @@ fn menu_header(mut frame_ui: ResMut<FrameUi>) {
 
 fn main_menu(mut frame_ui: ResMut<FrameUi>) {
     let Some(ui) = frame_ui.0.as_mut() else { return };
-    if ui.button("Start").kbgp_navigation().clicked() {}
+    if ui.button("Start").kbgp_navigation().kbgp_focus_label(FocusLabel::Start).clicked() {}
 }
 
+#[allow(dead_code)]
 fn exit_button(mut frame_ui: ResMut<FrameUi>, mut exit: EventWriter<bevy::app::AppExit>) {
     let Some(ui) = frame_ui.0.as_mut() else { return };
-    if ui.button("Exit").kbgp_navigation().clicked() {
+    if ui.button("Exit").kbgp_navigation().kbgp_focus_label(FocusLabel::Exit).clicked() {
         exit.send(Default::default());
     }
 }

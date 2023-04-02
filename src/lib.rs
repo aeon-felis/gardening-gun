@@ -18,3 +18,6 @@ pub enum AppState {
     #[default]
     MainMenu,
 }
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct MenuActionForKbgp;
