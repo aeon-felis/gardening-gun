@@ -1,8 +1,14 @@
 [package]
-name = "bevy_github_ci_template"
+name = "gardening-gun"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
 bevy = "0.10"
+bevy-egui-kbgp = "0.12.0"
+bevy-tnua = { version = "0.2.0", features = ["rapier_2d"] }
+bevy-yoleck = { version = "0.10.0", features = ["vpeol_3d"] }
+bevy_egui = "0.20.2"
+bevy_rapier2d = "0.21.0"
+leafwing-input-manager = "0.9.1"

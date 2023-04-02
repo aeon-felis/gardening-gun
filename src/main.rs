@@ -5,18 +5,19 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
 use bevy::prelude::*;
+use bevy_egui::{EguiPlugin, EguiSettings};
+use bevy_egui_kbgp::KbgpPlugin;
+use gardening_gun::GardeningGunGamePlugin;
 
 fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .add_startup_system(setup)
-        .run();
-}
-
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
-    commands.spawn(SpriteBundle {
-        texture: asset_server.load("icon.png"),
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins);
+    app.add_plugin(EguiPlugin);
+    app.insert_resource(EguiSettings {
+        scale_factor: 2.0,
         ..Default::default()
     });
+    app.add_plugin(KbgpPlugin);
+    app.add_plugin(GardeningGunGamePlugin);
+    app.run();
 }
