@@ -1,6 +1,11 @@
 local moonicipal = require'moonicipal'
 local T = moonicipal.tasks_file()
 
+require'idan'.unload_package('idan.project')
 T = require'idan.project.rust.bevy'(T, {
     crate_name = 'gardening_gun',
 })
+
+function T:go()
+    T:_simple_target_runner()('gardening-gun', '--editor')
+end
