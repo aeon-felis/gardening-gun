@@ -55,15 +55,15 @@ fn populate_player(
 
         cmd.insert(TnuaPlatformerBundle::new_with_config(
             TnuaPlatformerConfig {
-                full_speed: 10.0,
+                full_speed: 12.0,
                 full_jump_height: 4.0,
                 up: Vec3::Y,
                 forward: Vec3::X,
-                float_height: 2.0,
+                float_height: 1.5,
                 cling_distance: 1.0,
-                spring_strengh: 40.0,
-                spring_dampening: 0.4,
-                acceleration: 60.0,
+                spring_strengh: 400.0,
+                spring_dampening: 1.4,
+                acceleration: 40.0,
                 air_acceleration: 20.0,
                 coyote_time: 0.15,
                 jump_start_extra_gravity: 30.0,
@@ -76,7 +76,8 @@ fn populate_player(
             },
         ));
         cmd.insert(LockedAxes::ROTATION_LOCKED);
-        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.49, 0.0)));
+        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.45, 0.0)));
+        // cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.45)));
         cmd.insert(TnuaManualTurningOutput::default());
     });
 }
