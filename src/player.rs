@@ -2,10 +2,11 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig};
+use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaRapier2dSensorShape, TnuaManualTurningOutput};
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 
+use crate::animating::ApplyRotationToChild;
 use crate::editing_helpers::SnapToGrid;
 
 pub struct PlayerPlugin;
@@ -34,18 +35,21 @@ fn populate_player(
     populate.populate(|ctx, mut cmd, ()| {
         if ctx.is_first_time() {
             cmd.insert(VpeolWillContainClickableChildren);
-            cmd.insert(SceneBundle {
+            let child = cmd.commands().spawn(SceneBundle {
                 scene: asset_server.load("Player.glb#Scene0"),
                 ..Default::default()
-            });
+            }).id();
+            cmd.add_child(child);
+            cmd.insert(ApplyRotationToChild(child));
         }
+        cmd.insert(VisibilityBundle::default());
         cmd.insert(RigidBody::Dynamic);
         cmd.insert(Velocity::default());
         cmd.insert(Collider::capsule_y(0.5, 0.5));
 
         cmd.insert(TnuaPlatformerBundle::new_with_config(
             TnuaPlatformerConfig {
-                full_speed: 20.0,
+                full_speed: 10.0,
                 full_jump_height: 4.0,
                 up: Vec3::Y,
                 forward: Vec3::X,
@@ -65,5 +69,8 @@ fn populate_player(
                 turning_angvel: 10.0,
             },
         ));
+        cmd.insert(LockedAxes::ROTATION_LOCKED);
+        cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.49, 0.0)));
+        cmd.insert(TnuaManualTurningOutput::default());
     });
 }

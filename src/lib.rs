@@ -4,16 +4,19 @@ mod editing_helpers;
 mod menu;
 mod player;
 mod player_controls;
+mod animating;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::RapierConfiguration;
 use bevy_yoleck::prelude::*;
 
+use self::animating::AnimatingPlugin;
 use self::arena::ArenaPlugin;
 use self::camera::GardeningGunCameraPlugin;
 use self::editing_helpers::EditingHelpersPlugin;
 use self::menu::MenuPlugin;
 use self::player::PlayerPlugin;
+use self::player_controls::PlayerControlsPlugin;
 
 pub struct GardeningGunGamePlugin {
     pub is_editor: bool,
@@ -54,6 +57,8 @@ impl Plugin for GardeningGunGamePlugin {
 
         app.add_plugin(ArenaPlugin);
         app.add_plugin(PlayerPlugin);
+        app.add_plugin(PlayerControlsPlugin);
+        app.add_plugin(AnimatingPlugin);
         app.add_system(enable_disable_physics);
     }
 }
