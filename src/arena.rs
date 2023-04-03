@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 
@@ -12,7 +13,6 @@ impl Plugin for ArenaPlugin {
             YoleckEntityType::new("Block")
                 .with::<Vpeol3dPosition>()
                 .with::<GridSize>()
-                .insert_on_init_during_editor(|| VpeolDragPlane::XY)
                 .insert_on_init_during_editor(|| SnapToGrid)
                 .insert_on_init_during_editor(PreviousSize::default)
                 .insert_on_init(|| IsBlock)
@@ -67,5 +67,10 @@ fn populate_block(
                 }
             });
         }
+        cmd.insert(RigidBody::Fixed);
+        cmd.insert(Collider::cuboid(
+            size.0.x as f32 * 0.5,
+            size.0.y as f32 * 0.5,
+        ));
     })
 }

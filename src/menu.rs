@@ -55,6 +55,7 @@ fn prepare_menu(
 }
 
 fn draw_menu(mut egui_contexts: EguiContexts, mut frame_ui: ResMut<FrameUi>) {
+    let Some(frame_ui) = frame_ui.0.take() else { return };
     egui::CentralPanel::default()
         .frame(egui::Frame::none())
         .show(egui_contexts.ctx_mut(), |ui| {
@@ -62,7 +63,7 @@ fn draw_menu(mut egui_contexts: EguiContexts, mut frame_ui: ResMut<FrameUi>) {
             ui.with_layout(layout, |ui| {
                 let frame = egui::Frame::none();
                 let mut prepared = frame.begin(ui);
-                prepared.content_ui = frame_ui.0.take().unwrap();
+                prepared.content_ui = frame_ui;
                 prepared.end(ui);
             });
         });

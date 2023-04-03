@@ -2,14 +2,18 @@ mod arena;
 mod camera;
 mod editing_helpers;
 mod menu;
+mod player;
+mod player_controls;
 
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::RapierConfiguration;
 use bevy_yoleck::prelude::*;
 
 use self::arena::ArenaPlugin;
 use self::camera::GardeningGunCameraPlugin;
 use self::editing_helpers::EditingHelpersPlugin;
 use self::menu::MenuPlugin;
+use self::player::PlayerPlugin;
 
 pub struct GardeningGunGamePlugin {
     pub is_editor: bool,
@@ -29,9 +33,28 @@ impl Plugin for GardeningGunGamePlugin {
             app.add_plugin(EditingHelpersPlugin);
         } else {
             app.add_plugin(MenuPlugin);
+            if let Some(start_at_level) = &self.start_at_level {
+                let start_at_level = if start_at_level.ends_with(".yol") {
+                    start_at_level.clone()
+                } else {
+                    format!("{}.yol", start_at_level)
+                };
+                app.add_startup_system(
+                    move |mut yoleck_loading_command: ResMut<YoleckLoadingCommand>,
+                          asset_server: Res<AssetServer>,
+                          mut app_state: ResMut<NextState<AppState>>| {
+                        *yoleck_loading_command = YoleckLoadingCommand::FromAsset(
+                            asset_server.load(format!("levels/{}", start_at_level)),
+                        );
+                        app_state.set(AppState::Game); // TODO: change to level loading state?
+                    },
+                );
+            }
         }
 
         app.add_plugin(ArenaPlugin);
+        app.add_plugin(PlayerPlugin);
+        app.add_system(enable_disable_physics);
     }
 }
 
@@ -55,3 +78,10 @@ impl AppState {
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct MenuActionForKbgp;
+
+fn enable_disable_physics(
+    state: Res<State<AppState>>,
+    mut rapier_configuration: ResMut<RapierConfiguration>,
+) {
+    rapier_configuration.physics_pipeline_active = state.0 == AppState::Game;
+}

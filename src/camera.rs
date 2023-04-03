@@ -12,7 +12,7 @@ impl Plugin for GardeningGunCameraPlugin {
 pub fn setup_camera(mut commands: Commands) {
     let mut cmd = commands.spawn_empty();
     cmd.insert(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 5.0, 10.0)
+        transform: Transform::from_xyz(0.0, 3.0, 30.0)
             .looking_to(Vec3::new(0.0, -3.0, -10.0), Vec3::Y),
         ..Default::default()
     });

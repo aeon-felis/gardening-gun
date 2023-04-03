@@ -70,14 +70,14 @@ fn grid_resize(
         });
 
         if let Some(new_marker_pos) = knob.get_passed_data::<Vec3>() {
-            let other_corner = position.0 - offset.extend(0.0);
-            let size_f = (*new_marker_pos - other_corner).truncate();
+            let other_corner = position.0.truncate() - offset;
+            let size_f = new_marker_pos.truncate() - other_corner;
             let size_i =
                 IVec2::from_array(size_f.to_array().map(|coord| coord.round() as i32)) * diagonal;
             let size_u = UVec2::from_array(size_i.to_array().map(|coord| coord.max(1) as u32));
             size.0 = size_u;
             position.0 =
-                other_corner + (0.5 * diagonal.as_vec2() * size_u.as_vec2()).extend(position.0.z);
+                (other_corner + 0.5 * diagonal.as_vec2() * size_u.as_vec2()).extend(position.0.z);
         }
     }
 }

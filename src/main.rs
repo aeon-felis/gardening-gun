@@ -7,6 +7,8 @@
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bevy_egui_kbgp::{KbgpNavBindings, KbgpNavCommand, KbgpPlugin, KbgpSettings};
+use bevy_rapier2d::prelude::*;
+use bevy_tnua::{TnuaPlatformerPlugin, TnuaRapier2dPlugin};
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 use clap::Parser;
@@ -26,6 +28,9 @@ fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
     app.add_plugin(EguiPlugin);
+    app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+    app.add_plugin(TnuaPlatformerPlugin);
+    app.add_plugin(TnuaRapier2dPlugin);
     if args.editor {
         app.add_plugin(YoleckPluginForEditor);
         app.add_plugin(Vpeol3dPluginForEditor::sidescroller());
