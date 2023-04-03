@@ -362,9 +362,9 @@ dependencies = [
 
 [[package]]
 name = "bevy-tnua"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e80aa961381550d3607b0d1db18fcc72ad949b844b829a8db3dbe94fe2b3ace"
+checksum = "8f3b80defb9dae6d7cd5841d8d63723e7af4306f7c57a854292bb28143edb62d"
 dependencies = [
  "bevy",
  "bevy_rapier2d",

@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 bevy = { version = "0.10", features = ["bevy_scene", "bevy_gltf"] }
 bevy-egui-kbgp = "0.12.0"
-bevy-tnua = { version = "0.2.0", features = ["rapier_2d"] }
+bevy-tnua = { version = "0.2.1", features = ["rapier_2d"] }
 bevy-yoleck = { version = "0.10.0", features = ["vpeol_3d"] }
 bevy_egui = "0.20.2"
 bevy_rapier2d = "0.21.0"

@@ -32,7 +32,10 @@ fn apply_actors_rotation(
 #[derive(Component)]
 pub struct RotateAroundScaledAxis(pub Vec3);
 
-fn apply_rotate_around_axis(time: Res<Time>, mut query: Query<(&RotateAroundScaledAxis, &mut Transform)>) {
+fn apply_rotate_around_axis(
+    time: Res<Time>,
+    mut query: Query<(&RotateAroundScaledAxis, &mut Transform)>,
+) {
     for (RotateAroundScaledAxis(scaled_axis), mut transform) in query.iter_mut() {
         transform.rotate(Quat::from_scaled_axis(time.delta_seconds() * *scaled_axis));
     }
