@@ -11,6 +11,7 @@ use bevy_yoleck::vpeol::prelude::*;
 
 use crate::animating::ApplyRotationToChild;
 use crate::editing_helpers::SnapToGrid;
+use crate::pickable::{CanCarry, CanPick};
 
 pub struct PlayerPlugin;
 
@@ -79,5 +80,8 @@ fn populate_player(
         cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.45, 0.0)));
         // cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.45)));
         cmd.insert(TnuaManualTurningOutput::default());
+        cmd.insert(ActiveEvents::COLLISION_EVENTS);
+        cmd.insert(CanPick);
+        cmd.insert(CanCarry::default());
     });
 }

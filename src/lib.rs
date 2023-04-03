@@ -6,6 +6,7 @@ mod menu;
 mod pickable;
 mod player;
 mod player_controls;
+mod utils;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::RapierConfiguration;
