@@ -3,6 +3,7 @@ mod arena;
 mod camera;
 mod editing_helpers;
 mod menu;
+mod pickable;
 mod player;
 mod player_controls;
 
@@ -15,6 +16,7 @@ use self::arena::ArenaPlugin;
 use self::camera::GardeningGunCameraPlugin;
 use self::editing_helpers::EditingHelpersPlugin;
 use self::menu::MenuPlugin;
+use self::pickable::PickablePlugin;
 use self::player::PlayerPlugin;
 use self::player_controls::PlayerControlsPlugin;
 
@@ -59,6 +61,7 @@ impl Plugin for GardeningGunGamePlugin {
         app.add_plugin(PlayerPlugin);
         app.add_plugin(PlayerControlsPlugin);
         app.add_plugin(AnimatingPlugin);
+        app.add_plugin(PickablePlugin);
         app.add_system(enable_disable_physics);
     }
 }
