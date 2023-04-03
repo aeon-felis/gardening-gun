@@ -2,7 +2,10 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use bevy_tnua::{TnuaFreeFallBehavior, TnuaPlatformerBundle, TnuaPlatformerConfig, TnuaRapier2dSensorShape, TnuaManualTurningOutput};
+use bevy_tnua::{
+    TnuaFreeFallBehavior, TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
+    TnuaRapier2dSensorShape,
+};
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 
@@ -35,10 +38,13 @@ fn populate_player(
     populate.populate(|ctx, mut cmd, ()| {
         if ctx.is_first_time() {
             cmd.insert(VpeolWillContainClickableChildren);
-            let child = cmd.commands().spawn(SceneBundle {
-                scene: asset_server.load("Player.glb#Scene0"),
-                ..Default::default()
-            }).id();
+            let child = cmd
+                .commands()
+                .spawn(SceneBundle {
+                    scene: asset_server.load("Player.glb#Scene0"),
+                    ..Default::default()
+                })
+                .id();
             cmd.add_child(child);
             cmd.insert(ApplyRotationToChild(child));
         }

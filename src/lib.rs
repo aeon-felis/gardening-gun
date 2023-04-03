@@ -1,10 +1,10 @@
+mod animating;
 mod arena;
 mod camera;
 mod editing_helpers;
 mod menu;
 mod player;
 mod player_controls;
-mod animating;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::RapierConfiguration;

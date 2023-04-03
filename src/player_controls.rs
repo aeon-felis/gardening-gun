@@ -4,8 +4,8 @@ use bevy_yoleck::prelude::*;
 use leafwing_input_manager::axislike::VirtualAxis;
 use leafwing_input_manager::prelude::*;
 
-use crate::AppState;
 use crate::player::IsPlayer;
+use crate::AppState;
 
 #[derive(Actionlike, Clone, Debug)]
 enum PlayerAction {
