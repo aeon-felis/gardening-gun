@@ -7,6 +7,7 @@ mod pickable;
 mod player;
 mod player_controls;
 mod utils;
+mod floating_text;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::RapierConfiguration;
@@ -16,6 +17,7 @@ use self::animating::AnimatingPlugin;
 use self::arena::ArenaPlugin;
 use self::camera::GardeningGunCameraPlugin;
 use self::editing_helpers::EditingHelpersPlugin;
+use self::floating_text::FloatingTextPlugin;
 use self::menu::MenuPlugin;
 use self::pickable::PickablePlugin;
 use self::player::PlayerPlugin;
@@ -63,6 +65,7 @@ impl Plugin for GardeningGunGamePlugin {
         app.add_plugin(PlayerControlsPlugin);
         app.add_plugin(AnimatingPlugin);
         app.add_plugin(PickablePlugin);
+        app.add_plugin(FloatingTextPlugin);
         app.add_system(enable_disable_physics);
     }
 }
