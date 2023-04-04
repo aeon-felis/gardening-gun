@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_tnua::TnuaPlatformerControls;
 use bevy_yoleck::prelude::*;
-use leafwing_input_manager::axislike::VirtualAxis;
 use leafwing_input_manager::prelude::*;
 
 use crate::player::IsPlayer;
@@ -33,10 +32,16 @@ fn add_controls_to_player(mut populate: YoleckPopulate<(), With<IsPlayer>>) {
             action_state: Default::default(),
             input_map: {
                 let mut input_map = InputMap::default();
-                input_map.insert(VirtualAxis::horizontal_arrow_keys(), PlayerAction::Run);
-                input_map.insert(VirtualAxis::ad(), PlayerAction::Run);
+
+                input_map.insert(VirtualDPad::arrow_keys(), PlayerAction::Run);
+                input_map.insert(VirtualDPad::wasd(), PlayerAction::Run);
+                input_map.insert(VirtualDPad::dpad(), PlayerAction::Run);
+                input_map.insert(DualAxis::left_stick(), PlayerAction::Run);
+
                 input_map.insert(KeyCode::Z, PlayerAction::Jump);
                 input_map.insert(KeyCode::J, PlayerAction::Jump);
+                input_map.insert(GamepadButtonType::South, PlayerAction::Jump);
+
                 input_map
             },
         });
@@ -45,7 +50,11 @@ fn add_controls_to_player(mut populate: YoleckPopulate<(), With<IsPlayer>>) {
 
 fn apply_controls(mut query: Query<(&ActionState<PlayerAction>, &mut TnuaPlatformerControls)>) {
     for (input, mut controls) in query.iter_mut() {
-        let movement = Vec3::X * input.clamped_value(PlayerAction::Run);
+        let movement = if let Some(axis_pair) = input.clamped_axis_pair(PlayerAction::Run) {
+            Vec3::X * axis_pair.x()
+        } else {
+            Vec3::ZERO
+        };
         let jump = Some(input.clamped_value(PlayerAction::Jump)).filter(|jump| 0.0 < *jump);
         *controls = TnuaPlatformerControls {
             desired_velocity: movement,
