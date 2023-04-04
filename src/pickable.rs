@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::animating::{ApplyRotationToChild, RotateAroundScaledAxis};
 use crate::editing_helpers::SnapToGrid;
-use crate::utils::entities_ordered_by_type;
+use crate::utils::EntityMatcher;
 
 pub struct PickablePlugin;
 
@@ -84,13 +84,15 @@ pub struct PickEvent {
 
 fn initiate_pickup(
     mut reader: EventReader<CollisionEvent>,
-    picker_query: Query<(), With<CanPick>>,
-    pickable_query: Query<(), With<Pickable>>,
+    picker_query: Query<Entity, With<CanPick>>,
+    pickable_query: Query<Entity, With<Pickable>>,
     mut writer: EventWriter<PickEvent>,
 ) {
     for event in reader.iter() {
         let CollisionEvent::Started(e1, e2, CollisionEventFlags::SENSOR) = event else { continue };
-        let Some([picker, pickable]) = entities_ordered_by_type!([*e1, *e2], picker_query, pickable_query) else { continue };
+        let mut matcher = EntityMatcher::new([*e1, *e2]);
+        let Some(picker) = matcher.get(&picker_query) else { continue };
+        let Some(pickable) = matcher.get(&pickable_query) else { continue };
         writer.send(PickEvent { picker, pickable });
     }
 }
