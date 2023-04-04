@@ -1,11 +1,14 @@
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::prelude::*;
 use bevy::render::camera::RenderTarget;
-use bevy::render::render_resource::{TextureDescriptor, Extent3d, TextureDimension, TextureFormat, TextureUsages};
+use bevy::render::render_resource::{
+    Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+};
+use bevy::render::view::{check_visibility, RenderLayers, VisibilitySystems, VisibleEntities};
+use bevy_egui::egui;
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
-use bevy_egui::egui;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub struct FloatingTextPlugin;
 
@@ -19,6 +22,11 @@ impl Plugin for FloatingTextPlugin {
         });
         app.add_yoleck_edit_system(edit_text);
         app.yoleck_populate_schedule_mut().add_system(populate_text);
+        app.add_system(
+            override_visible_entities
+                .in_set(VisibilitySystems::CheckVisibility)
+                .after(check_visibility),
+        );
     }
 }
 
@@ -37,7 +45,10 @@ impl Default for FloatingText {
     }
 }
 
-fn edit_text(mut ui: ResMut<YoleckUi>, mut edit: YoleckEdit<(&mut FloatingText, &mut Vpeol3dPosition, &mut Vpeol3dScale)>) {
+fn edit_text(
+    mut ui: ResMut<YoleckUi>,
+    mut edit: YoleckEdit<(&mut FloatingText, &mut Vpeol3dPosition, &mut Vpeol3dScale)>,
+) {
     let Ok((mut text_content, mut position, mut scale)) = edit.get_single_mut() else { return };
     position.0.z = -1.0;
     ui.text_edit_multiline(&mut text_content.text);
@@ -46,12 +57,12 @@ fn edit_text(mut ui: ResMut<YoleckUi>, mut edit: YoleckEdit<(&mut FloatingText, 
     ui.add(egui::Slider::new(&mut scale.0.x, 0.5..=20.0).logarithmic(true));
     ui.add(egui::Slider::new(&mut ratio, 0.1..=10.0).logarithmic(true));
     scale.0.y = ratio * scale.0.x;
-
 }
 
 #[derive(Component)]
 struct FloatingTextChildren {
     text_entity: Entity,
+    camera_entity: Entity,
 }
 
 fn populate_text(
@@ -83,7 +94,9 @@ fn populate_text(
                     sample_count: 1,
                     dimension: TextureDimension::D2,
                     format: TextureFormat::Bgra8UnormSrgb,
-                    usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST | TextureUsages::RENDER_ATTACHMENT,
+                    usage: TextureUsages::TEXTURE_BINDING
+                        | TextureUsages::COPY_DST
+                        | TextureUsages::RENDER_ATTACHMENT,
                     view_formats: &[],
                 },
                 ..Default::default()
@@ -103,12 +116,17 @@ fn populate_text(
                 ..Default::default()
             });
 
-            text_entity = cmd.commands().spawn(Text2dBundle {
-                ..Default::default()
-            }).id();
+            text_entity = cmd
+                .commands()
+                .spawn(Text2dBundle {
+                    ..Default::default()
+                })
+                .insert(RenderLayers::layer(1))
+                .id();
             cmd.add_child(text_entity);
-            cmd.with_children(|commands| {
-                commands.spawn(Camera2dBundle {
+            let camera_entity = cmd
+                .commands()
+                .spawn(Camera2dBundle {
                     camera: Camera {
                         order: -1,
                         target: RenderTarget::Image(texture),
@@ -123,16 +141,38 @@ fn populate_text(
                         },
                     },
                     ..Default::default()
-                });
-            });
+                })
+                .insert(RenderLayers::layer(1))
+                .id();
+            cmd.add_child(camera_entity);
             cmd.insert(FloatingTextChildren {
                 text_entity,
+                camera_entity,
             });
         }
-        cmd.commands().entity(text_entity).insert(Text::from_section(&text_content.text, TextStyle {
-            font: asset_server.load("FiraSans-Bold.ttf"),
-            font_size: text_content.font_size,
-            color: Color::WHITE,
-        }));
+        cmd.commands()
+            .entity(text_entity)
+            .insert(Text::from_section(
+                &text_content.text,
+                TextStyle {
+                    font: asset_server.load("FiraSans-Bold.ttf"),
+                    font_size: text_content.font_size,
+                    color: Color::WHITE,
+                },
+            ));
     });
+}
+
+fn override_visible_entities(
+    parents_query: Query<&FloatingTextChildren>,
+    mut visible_entities_query: Query<&mut VisibleEntities>,
+) {
+    for FloatingTextChildren {
+        text_entity,
+        camera_entity,
+    } in parents_query.iter()
+    {
+        let Ok(mut visible_entities) = visible_entities_query.get_mut(*camera_entity) else { continue };
+        visible_entities.entities = vec![*text_entity];
+    }
 }

@@ -2,12 +2,12 @@ mod animating;
 mod arena;
 mod camera;
 mod editing_helpers;
+mod floating_text;
 mod menu;
 mod pickable;
 mod player;
 mod player_controls;
 mod utils;
-mod floating_text;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::RapierConfiguration;
