@@ -1,13 +1,12 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use bevy_rapier2d::rapier::prelude::CollisionEventFlags;
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::animating::{ApplyRotationToChild, RotateAroundScaledAxis};
 use crate::editing_helpers::SnapToGrid;
-use crate::utils::EntityMatcher;
+use crate::utils::sensor_events_both_ways;
 
 pub struct PickablePlugin;
 
@@ -88,11 +87,8 @@ fn initiate_pickup(
     pickable_query: Query<Entity, With<Pickable>>,
     mut writer: EventWriter<PickEvent>,
 ) {
-    for event in reader.iter() {
-        let CollisionEvent::Started(e1, e2, CollisionEventFlags::SENSOR) = event else { continue };
-        let mut matcher = EntityMatcher::new([*e1, *e2]);
-        let Some(picker) = matcher.get(&picker_query) else { continue };
-        let Some(pickable) = matcher.get(&pickable_query) else { continue };
+    for (e1, e2) in sensor_events_both_ways(&mut reader) {
+        let (Ok(picker), Ok(pickable)) = (picker_query.get(e1), pickable_query.get(e2)) else { continue };
         writer.send(PickEvent { picker, pickable });
     }
 }
