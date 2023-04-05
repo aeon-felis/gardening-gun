@@ -8,11 +8,12 @@ use crate::animating::{ApplyRotationToChild, RotateAroundScaledAxis};
 use crate::editing_helpers::SnapToGrid;
 use crate::utils::sensor_events_both_ways;
 
-pub struct PickablePlugin;
+pub struct AmmunitionPlugin;
 
-impl Plugin for PickablePlugin {
+impl Plugin for AmmunitionPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PickEvent>();
+        app.add_event::<UseUpShotEvent>();
         app.add_yoleck_entity_type({
             YoleckEntityType::new("PickableAmmo")
                 .with::<Vpeol3dPosition>()
@@ -23,6 +24,7 @@ impl Plugin for PickablePlugin {
         app.yoleck_populate_schedule_mut()
             .add_system(populate_pickable_ammo);
         app.add_systems((initiate_pickup, handle_carrying).chain());
+        app.add_system(handle_useup);
     }
 }
 
@@ -94,7 +96,9 @@ fn initiate_pickup(
 }
 
 #[derive(Component)]
-pub struct Carried;
+pub struct CarriedAmmunition {
+    remaining_shots: usize,
+}
 
 #[derive(Component, Default)]
 pub struct CanCarry {
@@ -117,7 +121,8 @@ fn handle_carrying(
         commands.entity(event.pickable).despawn_recursive();
         commands.entity(*model_entity).with_children(|commands| {
             let mut cmd = commands.spawn_empty();
-            cmd.insert((Carried, plant_type.clone()));
+            cmd.insert(CarriedAmmunition { remaining_shots: 3 });
+            cmd.insert(plant_type.clone());
             cmd.insert(SceneBundle {
                 scene: asset_server.load(plant_type.scene_name()),
                 transform: Transform::from_xyz(0.0, 1.0, 1.0).with_scale(Vec3::ONE * 0.5),
@@ -125,5 +130,24 @@ fn handle_carrying(
             });
             can_carry.carries = Some(cmd.id());
         });
+    }
+}
+
+pub struct UseUpShotEvent {
+    pub carried_ammunition_entity: Entity,
+}
+
+fn handle_useup(
+    mut reader: EventReader<UseUpShotEvent>,
+    mut query: Query<(&mut CarriedAmmunition, &mut Transform)>,
+) {
+    for event in reader.iter() {
+        let Ok((mut carried_ammunition, mut transform)) = query.get_mut(event.carried_ammunition_entity) else { continue };
+        carried_ammunition.remaining_shots -= 1;
+        transform.scale -= Vec3::ONE * 0.1;
+
+        if carried_ammunition.remaining_shots == 0 {
+            // TODO: eject
+        }
     }
 }

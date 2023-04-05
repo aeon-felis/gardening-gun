@@ -10,12 +10,14 @@ use crate::AppState;
 enum PlayerAction {
     Run,
     Jump,
+    Shoot,
 }
 
 pub struct PlayerControlsPlugin;
 
 impl Plugin for PlayerControlsPlugin {
     fn build(&self, app: &mut App) {
+        app.add_event::<ShootEvent>();
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default());
         app.yoleck_populate_schedule_mut()
             .add_system(add_controls_to_player);
@@ -42,24 +44,45 @@ fn add_controls_to_player(mut populate: YoleckPopulate<(), With<IsPlayer>>) {
                 input_map.insert(KeyCode::J, PlayerAction::Jump);
                 input_map.insert(GamepadButtonType::South, PlayerAction::Jump);
 
+                input_map.insert(KeyCode::X, PlayerAction::Shoot);
+                input_map.insert(KeyCode::K, PlayerAction::Shoot);
+                input_map.insert(GamepadButtonType::West, PlayerAction::Shoot);
+
                 input_map
             },
         });
     });
 }
 
-fn apply_controls(mut query: Query<(&ActionState<PlayerAction>, &mut TnuaPlatformerControls)>) {
-    for (input, mut controls) in query.iter_mut() {
-        let movement = if let Some(axis_pair) = input.clamped_axis_pair(PlayerAction::Run) {
-            Vec3::X * axis_pair.x()
+pub struct ShootEvent {
+    pub shooter_entity: Entity,
+    pub direction: Vec3,
+}
+
+fn apply_controls(
+    mut query: Query<(
+        Entity,
+        &ActionState<PlayerAction>,
+        &mut TnuaPlatformerControls,
+    )>,
+    mut shoot_events_writer: EventWriter<ShootEvent>,
+) {
+    for (player_entity, input, mut controls) in query.iter_mut() {
+        if let Some(axis_pair) = input.clamped_axis_pair(PlayerAction::Run) {
+            controls.desired_velocity = Vec3::X * axis_pair.x();
+            if 0.1 < axis_pair.x().abs() {
+                controls.desired_forward = Vec3::X * axis_pair.x().signum();
+            }
         } else {
-            Vec3::ZERO
+            controls.desired_velocity = Vec3::ZERO;
         };
-        let jump = Some(input.clamped_value(PlayerAction::Jump)).filter(|jump| 0.0 < *jump);
-        *controls = TnuaPlatformerControls {
-            desired_velocity: movement,
-            desired_forward: movement,
-            jump,
-        };
+        controls.jump = Some(input.clamped_value(PlayerAction::Jump)).filter(|jump| 0.0 < *jump);
+
+        if input.just_pressed(PlayerAction::Shoot) {
+            shoot_events_writer.send(ShootEvent {
+                shooter_entity: player_entity,
+                direction: controls.desired_forward,
+            });
+        }
     }
 }

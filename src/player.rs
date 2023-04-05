@@ -4,14 +4,15 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
     TnuaFreeFallBehavior, TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
-    TnuaRapier2dSensorShape,
+    TnuaPlatformerControls, TnuaRapier2dSensorShape,
 };
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 
+use crate::ammunition::{CanCarry, CanPick};
 use crate::animating::ApplyRotationToChild;
 use crate::editing_helpers::SnapToGrid;
-use crate::pickable::{CanCarry, CanPick};
+use crate::shooting::CanShoot;
 
 pub struct PlayerPlugin;
 
@@ -73,15 +74,19 @@ fn populate_player(
                 free_fall_behavior: TnuaFreeFallBehavior::LikeJumpShorten,
                 tilt_offset_angvel: 5.0,
                 tilt_offset_angacl: 500.0,
-                turning_angvel: 10.0,
+                turning_angvel: 30.0,
             },
         ));
+        cmd.insert(TnuaPlatformerControls {
+            desired_forward: Vec3::X,
+            ..Default::default()
+        });
         cmd.insert(LockedAxes::ROTATION_LOCKED);
         cmd.insert(TnuaRapier2dSensorShape(Collider::cuboid(0.45, 0.0)));
-        // cmd.insert(TnuaRapier2dSensorShape(Collider::ball(0.45)));
         cmd.insert(TnuaManualTurningOutput::default());
         cmd.insert(ActiveEvents::COLLISION_EVENTS);
         cmd.insert(CanPick);
         cmd.insert(CanCarry::default());
+        cmd.insert(CanShoot::default());
     });
 }
