@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
-use serde::{Deserialize, Serialize};
 
 use crate::animating::{ApplyRotationToChild, RotateAroundScaledAxis};
 use crate::editing_helpers::SnapToGrid;
+use crate::planting::{FlyingSeed, PlantType};
 use crate::utils::sensor_events_both_ways;
 
 pub struct AmmunitionPlugin;
@@ -25,20 +25,6 @@ impl Plugin for AmmunitionPlugin {
             .add_system(populate_pickable_ammo);
         app.add_systems((initiate_pickup, handle_carrying).chain());
         app.add_system(handle_useup);
-    }
-}
-
-#[derive(YoleckComponent, Default, Clone, PartialEq, Eq, Component, Serialize, Deserialize)]
-enum PlantType {
-    #[default]
-    Tree,
-}
-
-impl PlantType {
-    fn scene_name(&self) -> &'static str {
-        match self {
-            PlantType::Tree => "Tree.glb#Scene0",
-        }
     }
 }
 
@@ -100,7 +86,7 @@ pub struct CarriedAmmunition {
     remaining_shots: usize,
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Debug)]
 pub struct CanCarry {
     pub carries: Option<Entity>,
 }
@@ -121,7 +107,7 @@ fn handle_carrying(
         commands.entity(event.pickable).despawn_recursive();
         commands.entity(*model_entity).with_children(|commands| {
             let mut cmd = commands.spawn_empty();
-            cmd.insert(CarriedAmmunition { remaining_shots: 3 });
+            cmd.insert(CarriedAmmunition { remaining_shots: 1 });
             cmd.insert(plant_type.clone());
             cmd.insert(SceneBundle {
                 scene: asset_server.load(plant_type.scene_name()),
@@ -134,20 +120,37 @@ fn handle_carrying(
 }
 
 pub struct UseUpShotEvent {
+    pub carrier_entity: Entity,
     pub carried_ammunition_entity: Entity,
+    pub ejecet_direction: Vec3,
 }
 
 fn handle_useup(
     mut reader: EventReader<UseUpShotEvent>,
-    mut query: Query<(&mut CarriedAmmunition, &mut Transform)>,
+    mut query: Query<(&mut CarriedAmmunition, &mut Transform, &GlobalTransform)>,
+    mut carrier_query: Query<&mut CanCarry>,
+    mut commands: Commands,
 ) {
     for event in reader.iter() {
-        let Ok((mut carried_ammunition, mut transform)) = query.get_mut(event.carried_ammunition_entity) else { continue };
+        let Ok((mut carried_ammunition, mut transform, global_transform)) = query.get_mut(event.carried_ammunition_entity) else { continue };
         carried_ammunition.remaining_shots -= 1;
         transform.scale -= Vec3::ONE * 0.1;
 
         if carried_ammunition.remaining_shots == 0 {
-            // TODO: eject
+            if let Ok(mut can_carry) = carrier_query.get_mut(event.carrier_entity) {
+                can_carry.carries = None;
+            }
+            *transform = global_transform.compute_transform();
+            let mut cmd = commands.entity(event.carried_ammunition_entity);
+            cmd.remove_parent();
+            cmd.insert(RigidBody::Dynamic);
+            cmd.insert(Collider::capsule_y(0.5, 0.5));
+            cmd.insert(Velocity {
+                linvel: 3.0 * event.ejecet_direction.truncate() + 20.0 * Vec2::Y,
+                angvel: -10.0 * event.ejecet_direction.x,
+            });
+            cmd.insert(ActiveEvents::COLLISION_EVENTS);
+            cmd.insert(FlyingSeed);
         }
     }
 }

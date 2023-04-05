@@ -4,6 +4,7 @@ use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 
 use crate::editing_helpers::{GridSize, SnapToGrid};
+use crate::planting::FertileGround;
 use crate::shooting::DestroysBullets;
 
 pub struct ArenaPlugin;
@@ -74,5 +75,6 @@ fn populate_block(
             size.0.y as f32 * 0.5,
         ));
         cmd.insert(DestroysBullets);
+        cmd.insert(FertileGround);
     })
 }

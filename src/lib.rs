@@ -5,6 +5,7 @@ mod camera;
 mod editing_helpers;
 mod floating_text;
 mod menu;
+mod planting;
 mod player;
 mod player_controls;
 mod shooting;
@@ -21,6 +22,7 @@ use self::camera::GardeningGunCameraPlugin;
 use self::editing_helpers::EditingHelpersPlugin;
 use self::floating_text::FloatingTextPlugin;
 use self::menu::MenuPlugin;
+use self::planting::PlantingPlugin;
 use self::player::PlayerPlugin;
 use self::player_controls::PlayerControlsPlugin;
 use self::shooting::ShootingPlugin;
@@ -69,6 +71,7 @@ impl Plugin for GardeningGunGamePlugin {
         app.add_plugin(AmmunitionPlugin);
         app.add_plugin(FloatingTextPlugin);
         app.add_plugin(ShootingPlugin);
+        app.add_plugin(PlantingPlugin);
         app.add_system(enable_disable_physics);
     }
 }

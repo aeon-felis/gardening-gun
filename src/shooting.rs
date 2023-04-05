@@ -88,7 +88,9 @@ fn apply_shooting(
         });
         cmd.insert(ActiveEvents::COLLISION_EVENTS);
         use_up_shots_writer.send(UseUpShotEvent {
+            carrier_entity: event.shooter_entity,
             carried_ammunition_entity,
+            ejecet_direction: -event.direction,
         });
     }
 }
