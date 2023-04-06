@@ -7,6 +7,7 @@
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bevy_egui_kbgp::{KbgpNavBindings, KbgpNavCommand, KbgpPlugin, KbgpSettings};
+use bevy_pkv::PkvStore;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{TnuaPlatformerPlugin, TnuaRapier2dPlugin};
 use bevy_yoleck::prelude::*;
@@ -27,6 +28,7 @@ fn main() {
 
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
+    app.insert_resource(PkvStore::new("AeonFelis", "GardeningGun"));
     app.add_plugin(EguiPlugin);
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugin(TnuaPlatformerPlugin);

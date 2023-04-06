@@ -4,6 +4,7 @@ mod arena;
 mod camera;
 mod editing_helpers;
 mod floating_text;
+mod level_handling;
 mod menu;
 mod planting;
 mod player;
@@ -21,6 +22,7 @@ use self::arena::ArenaPlugin;
 use self::camera::GardeningGunCameraPlugin;
 use self::editing_helpers::EditingHelpersPlugin;
 use self::floating_text::FloatingTextPlugin;
+use self::level_handling::{LevelHandlingPlugin, LevelProgress};
 use self::menu::MenuPlugin;
 use self::planting::PlantingPlugin;
 use self::player::PlayerPlugin;
@@ -45,6 +47,7 @@ impl Plugin for GardeningGunGamePlugin {
             app.add_plugin(EditingHelpersPlugin);
         } else {
             app.add_plugin(MenuPlugin);
+            app.add_plugin(LevelHandlingPlugin);
             if let Some(start_at_level) = &self.start_at_level {
                 let start_at_level = if start_at_level.ends_with(".yol") {
                     start_at_level.clone()
@@ -52,13 +55,10 @@ impl Plugin for GardeningGunGamePlugin {
                     format!("{}.yol", start_at_level)
                 };
                 app.add_startup_system(
-                    move |mut yoleck_loading_command: ResMut<YoleckLoadingCommand>,
-                          asset_server: Res<AssetServer>,
+                    move |mut level_progress: ResMut<LevelProgress>,
                           mut app_state: ResMut<NextState<AppState>>| {
-                        *yoleck_loading_command = YoleckLoadingCommand::FromAsset(
-                            asset_server.load(format!("levels/{}", start_at_level)),
-                        );
-                        app_state.set(AppState::Game); // TODO: change to level loading state?
+                        level_progress.current_level = Some(start_at_level.clone());
+                        app_state.set(AppState::LoadLevel);
                     },
                 );
             }
@@ -82,6 +82,8 @@ pub enum AppState {
     MainMenu,
     Editor,
     Game,
+    PauseMenu,
+    LoadLevel,
 }
 
 impl AppState {
@@ -90,6 +92,8 @@ impl AppState {
             AppState::MainMenu => true,
             AppState::Editor => false,
             AppState::Game => false,
+            AppState::PauseMenu => true,
+            AppState::LoadLevel => false,
         }
     }
 }

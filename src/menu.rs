@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use bevy_egui_kbgp::prelude::*;
 
-use crate::AppState;
+use crate::{AppState, MenuActionForKbgp};
 
 #[derive()]
 pub struct MenuPlugin;
@@ -10,17 +10,33 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<FrameUi>();
+        app.add_system(pause_unpause_game);
         app.add_systems(
             (
                 prepare_menu,
                 menu_header,
                 main_menu.in_set(OnUpdate(AppState::MainMenu)),
+                pause_menu.in_set(OnUpdate(AppState::PauseMenu)),
                 #[cfg(not(target_arch = "wasm32"))]
                 exit_button,
                 draw_menu,
             )
                 .chain(),
         );
+    }
+}
+
+fn pause_unpause_game(
+    mut egui_contexts: EguiContexts,
+    state: Res<State<AppState>>,
+    mut next_state: ResMut<NextState<AppState>>,
+) {
+    if matches!(state.0, AppState::Game) {
+        let egui_context = egui_contexts.ctx_mut();
+        if egui_context.kbgp_user_action() == Some(MenuActionForKbgp) {
+            next_state.set(AppState::PauseMenu);
+            egui_context.kbgp_clear_input();
+        }
     }
 }
 
@@ -87,8 +103,25 @@ fn main_menu(mut frame_ui: ResMut<FrameUi>) {
         .button("Start")
         .kbgp_navigation()
         .kbgp_focus_label(FocusLabel::Start)
+        .kbgp_initial_focus()
         .clicked()
     {}
+}
+
+fn pause_menu(mut frame_ui: ResMut<FrameUi>, mut next_state: ResMut<NextState<AppState>>) {
+    let Some(ui) = frame_ui.0.as_mut() else { return };
+    if ui
+        .button("Resume")
+        .kbgp_navigation()
+        .kbgp_initial_focus()
+        .clicked()
+        || ui.kbgp_user_action() == Some(MenuActionForKbgp)
+    {
+        next_state.set(AppState::Game);
+    }
+    if ui.button("Retry").kbgp_navigation().clicked() {
+        next_state.set(AppState::LoadLevel);
+    }
 }
 
 #[allow(dead_code)]
