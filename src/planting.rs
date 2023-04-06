@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use bevy_yoleck::prelude::YoleckComponent;
+use bevy_yoleck::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::utils::events_both_ways;
@@ -60,6 +60,7 @@ fn initiate_planting(
         cmd.insert(Collider::cuboid(1.0, 1.5));
         cmd.insert(LockedAxes::ROTATION_LOCKED | LockedAxes::TRANSLATION_LOCKED_X);
         cmd.insert(Growing);
+        cmd.insert(YoleckBelongsToLevel);
     }
 }
 

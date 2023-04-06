@@ -372,9 +372,9 @@ dependencies = [
 
 [[package]]
 name = "bevy-yoleck"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "397950f5f7fe76290edcbbba50b9d30ecc29be3ad5e78fda3e7c6fefb2496c2a"
+checksum = "bf317b34b1990ced55aab0b25ff5c1b3e8861a17cfd526b5d572017d7e4b4fc6"
 dependencies = [
  "anyhow",
  "bevy",

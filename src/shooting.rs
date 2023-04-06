@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use bevy_yoleck::prelude::*;
 
 use crate::ammunition::{CanCarry, UseUpShotEvent};
 use crate::player_controls::ShootEvent;
@@ -87,6 +88,7 @@ fn apply_shooting(
             timeout: Timer::from_seconds(20.0, TimerMode::Once),
         });
         cmd.insert(ActiveEvents::COLLISION_EVENTS);
+        cmd.insert(YoleckBelongsToLevel);
         use_up_shots_writer.send(UseUpShotEvent {
             carrier_entity: event.shooter_entity,
             carried_ammunition_entity,
