@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use bevy_egui_kbgp::prelude::*;
+use bevy_yoleck::prelude::*;
 
+use crate::level_handling::LevelProgress;
 use crate::{AppState, MenuActionForKbgp};
 
 #[derive()]
@@ -17,6 +19,7 @@ impl Plugin for MenuPlugin {
                 menu_header,
                 main_menu.in_set(OnUpdate(AppState::MainMenu)),
                 pause_menu.in_set(OnUpdate(AppState::PauseMenu)),
+                level_select_menu.in_set(OnUpdate(AppState::LevelSelectMenu)),
                 #[cfg(not(target_arch = "wasm32"))]
                 exit_button,
                 draw_menu,
@@ -44,6 +47,9 @@ fn pause_unpause_game(
 enum FocusLabel {
     Start,
     Exit,
+    NextLevel,
+    BackToMainMenu,
+    CurrentLevel,
 }
 
 #[derive(Resource, Default)]
@@ -97,7 +103,14 @@ fn menu_header(mut frame_ui: ResMut<FrameUi>) {
     ui.add_space(20.0);
 }
 
-fn main_menu(mut frame_ui: ResMut<FrameUi>) {
+fn format_level_name(filename: &str) -> String {
+    filename
+        .strip_suffix(".yol")
+        .unwrap_or(filename)
+        .replace('_', " ")
+}
+
+fn main_menu(mut frame_ui: ResMut<FrameUi>, mut next_state: ResMut<NextState<AppState>>) {
     let Some(ui) = frame_ui.0.as_mut() else { return };
     if ui
         .button("Start")
@@ -105,7 +118,11 @@ fn main_menu(mut frame_ui: ResMut<FrameUi>) {
         .kbgp_focus_label(FocusLabel::Start)
         .kbgp_initial_focus()
         .clicked()
-    {}
+    {
+        next_state.set(AppState::LevelSelectMenu);
+        ui.kbgp_clear_input();
+        ui.kbgp_set_focus_label(FocusLabel::NextLevel);
+    }
 }
 
 fn pause_menu(mut frame_ui: ResMut<FrameUi>, mut next_state: ResMut<NextState<AppState>>) {
@@ -122,6 +139,72 @@ fn pause_menu(mut frame_ui: ResMut<FrameUi>, mut next_state: ResMut<NextState<Ap
     if ui.button("Retry").kbgp_navigation().clicked() {
         next_state.set(AppState::LoadLevel);
     }
+    if ui
+        .button("Level Select")
+        .kbgp_navigation()
+        .kbgp_initial_focus()
+        .clicked()
+    {
+        next_state.set(AppState::LevelSelectMenu);
+        ui.kbgp_clear_input();
+        ui.kbgp_set_focus_label(FocusLabel::CurrentLevel);
+    }
+    if ui.button("Main Menu").kbgp_navigation().clicked() {
+        next_state.set(AppState::MainMenu);
+        ui.kbgp_clear_input();
+        ui.kbgp_set_focus_label(FocusLabel::Start);
+    }
+}
+
+fn level_select_menu(
+    mut frame_ui: ResMut<FrameUi>,
+    mut next_state: ResMut<NextState<AppState>>,
+    level_index_assets: Res<Assets<YoleckLevelIndex>>,
+    mut level_progress: ResMut<LevelProgress>,
+) {
+    let Some(ui) = frame_ui.0.as_mut() else { return };
+    let level_index = level_index_assets.get(&level_progress.level_index);
+
+    if ui.kbgp_user_action() == Some(MenuActionForKbgp) {
+        ui.kbgp_set_focus_label(FocusLabel::BackToMainMenu);
+    }
+    let mut response = ui
+        .button("Back To Menu")
+        .kbgp_navigation()
+        .kbgp_focus_label(FocusLabel::BackToMainMenu);
+
+    if level_index
+        .map(|level_index| level_index.len() < level_progress.num_levels_available)
+        .unwrap_or(true)
+    {
+        response = response.kbgp_focus_label(FocusLabel::NextLevel);
+    }
+    if response.clicked() {
+        next_state.set(AppState::MainMenu);
+    }
+
+    let Some(level_index) = level_index else { return };
+
+    egui::ScrollArea::vertical().show(ui, |ui| {
+        for (index, level) in level_index.iter().enumerate() {
+            let mut response = ui
+                .add_enabled(
+                    index < level_progress.num_levels_available,
+                    egui::Button::new(format_level_name(&level.filename)),
+                )
+                .kbgp_navigation();
+            if index + 1 == level_progress.num_levels_available {
+                response = response.kbgp_focus_label(FocusLabel::NextLevel);
+            }
+            if Some(&level.filename) == level_progress.current_level.as_ref() {
+                response = response.kbgp_focus_label(FocusLabel::CurrentLevel);
+            }
+            if response.clicked() {
+                level_progress.current_level = Some(level.filename.clone());
+                next_state.set(AppState::LoadLevel);
+            }
+        }
+    });
 }
 
 #[allow(dead_code)]

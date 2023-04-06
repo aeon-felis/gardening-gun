@@ -151,6 +151,7 @@ fn handle_useup(
             });
             cmd.insert(ActiveEvents::COLLISION_EVENTS);
             cmd.insert(FlyingSeed);
+            cmd.insert(YoleckBelongsToLevel);
         }
     }
 }

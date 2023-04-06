@@ -80,20 +80,22 @@ impl Plugin for GardeningGunGamePlugin {
 pub enum AppState {
     #[default]
     MainMenu,
+    PauseMenu,
+    LevelSelectMenu,
+    LoadLevel,
     Editor,
     Game,
-    PauseMenu,
-    LoadLevel,
 }
 
 impl AppState {
     pub fn is_menu(&self) -> bool {
         match self {
             AppState::MainMenu => true,
+            AppState::PauseMenu => true,
+            AppState::LevelSelectMenu => true,
+            AppState::LoadLevel => false,
             AppState::Editor => false,
             AppState::Game => false,
-            AppState::PauseMenu => true,
-            AppState::LoadLevel => false,
         }
     }
 }
