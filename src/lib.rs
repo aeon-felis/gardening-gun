@@ -88,6 +88,7 @@ pub enum AppState {
     LoadLevel,
     Editor,
     Game,
+    LevelCompleted,
 }
 
 impl AppState {
@@ -99,6 +100,7 @@ impl AppState {
             AppState::LoadLevel => false,
             AppState::Editor => false,
             AppState::Game => false,
+            AppState::LevelCompleted => false,
         }
     }
 }

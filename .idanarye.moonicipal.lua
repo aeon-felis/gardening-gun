@@ -17,3 +17,8 @@ T = require'idan.project.rust.bevy'(T, {
 function T:go()
     T:_simple_target_runner()('gardening-gun', '--editor')
 end
+
+function T:erase_save()
+    vim.cmd'!rm -Rf ~/.local/share/gardeninggun'
+end
+

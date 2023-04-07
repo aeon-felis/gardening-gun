@@ -1,9 +1,12 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 
 use crate::animating::{AnimationsOwner, GetClipsFrom};
 use crate::editing_helpers::SnapToGrid;
+use crate::player::IsPlayer;
+use crate::utils::sensor_events_both_ways;
 use crate::AppState;
 
 pub struct GatePlugin;
@@ -18,6 +21,7 @@ impl Plugin for GatePlugin {
         });
         app.yoleck_populate_schedule_mut().add_system(populate_gate);
         app.add_system(initiate_gate_opening.in_set(OnUpdate(AppState::Game)));
+        app.add_system(pass_through_gate);
     }
 }
 
@@ -36,6 +40,9 @@ fn populate_gate(mut populate: YoleckPopulate<(), With<Gate>>, asset_server: Res
             cmd.insert(VpeolWillContainClickableChildren);
             cmd.insert(AnimationsOwner::default());
             cmd.insert(GetClipsFrom(asset_server.load("Gate.glb")));
+            cmd.insert(RigidBody::Fixed);
+            cmd.insert(Collider::cuboid(1.0, 1.5));
+            cmd.insert(Sensor);
         }
     });
 }
@@ -54,5 +61,22 @@ fn initiate_gate_opening(
         let Ok(mut animation_player) = animation_players_query.get_mut(*animation_player_entity) else { continue };
         animation_player.start(animation_clip.clone());
         gate.is_open = true;
+    }
+}
+
+fn pass_through_gate(
+    mut reader: EventReader<CollisionEvent>,
+    players_query: Query<(), With<IsPlayer>>,
+    gates_query: Query<&Gate>,
+    mut next_state: ResMut<NextState<AppState>>,
+) {
+    for (e1, e2) in sensor_events_both_ways(&mut reader) {
+        let (Ok(_), Ok(gate)) = (
+            players_query.get(e1),
+            gates_query.get(e2),
+        ) else { continue };
+        if gate.is_open {
+            next_state.set(AppState::LevelCompleted);
+        }
     }
 }

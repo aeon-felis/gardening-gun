@@ -44,7 +44,7 @@ fn pause_unpause_game(
 }
 
 #[derive(PartialEq)]
-enum FocusLabel {
+pub enum FocusLabel {
     Start,
     Exit,
     NextLevel,
@@ -163,6 +163,16 @@ fn level_select_menu(
     mut level_progress: ResMut<LevelProgress>,
 ) {
     let Some(ui) = frame_ui.0.as_mut() else { return };
+
+    if let Some(just_completed) = level_progress.just_completed.as_ref() {
+        ui.label(
+            egui::RichText::new(format!("Finished {}", format_level_name(just_completed)))
+                .size(20.0)
+                .strong(),
+        );
+        ui.add_space(10.0);
+    }
+
     let level_index = level_index_assets.get(&level_progress.level_index);
 
     if ui.kbgp_user_action() == Some(MenuActionForKbgp) {
@@ -186,13 +196,24 @@ fn level_select_menu(
     let Some(level_index) = level_index else { return };
 
     egui::ScrollArea::vertical().show(ui, |ui| {
-        for (index, level) in level_index.iter().enumerate() {
-            let mut response = ui
-                .add_enabled(
-                    index < level_progress.num_levels_available,
-                    egui::Button::new(format_level_name(&level.filename)),
-                )
-                .kbgp_navigation();
+        for (index, level) in level_index
+            .iter()
+            .enumerate()
+            .take(level_progress.num_levels_available)
+        {
+            let mut button_text = egui::text::LayoutJob::default();
+            button_text.append(&format_level_name(&level.filename), 0.0, Default::default());
+            if index + 1 < level_progress.num_levels_available {
+                button_text.append(
+                    "(complete)",
+                    4.0,
+                    egui::TextFormat {
+                        color: egui::Color32::GREEN,
+                        ..Default::default()
+                    },
+                );
+            }
+            let mut response = ui.add(egui::Button::new(button_text)).kbgp_navigation();
             if index + 1 == level_progress.num_levels_available {
                 response = response.kbgp_focus_label(FocusLabel::NextLevel);
             }
