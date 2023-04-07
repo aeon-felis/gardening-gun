@@ -4,6 +4,7 @@ mod arena;
 mod camera;
 mod editing_helpers;
 mod floating_text;
+mod gate;
 mod level_handling;
 mod menu;
 mod planting;
@@ -22,6 +23,7 @@ use self::arena::ArenaPlugin;
 use self::camera::GardeningGunCameraPlugin;
 use self::editing_helpers::EditingHelpersPlugin;
 use self::floating_text::FloatingTextPlugin;
+use self::gate::GatePlugin;
 use self::level_handling::{LevelHandlingPlugin, LevelProgress};
 use self::menu::MenuPlugin;
 use self::planting::PlantingPlugin;
@@ -72,6 +74,7 @@ impl Plugin for GardeningGunGamePlugin {
         app.add_plugin(FloatingTextPlugin);
         app.add_plugin(ShootingPlugin);
         app.add_plugin(PlantingPlugin);
+        app.add_plugin(GatePlugin);
         app.add_system(enable_disable_physics);
     }
 }
