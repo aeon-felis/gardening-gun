@@ -5,6 +5,7 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
 use bevy::prelude::*;
+use bevy::window::WindowResolution;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bevy_egui_kbgp::{KbgpNavBindings, KbgpNavCommand, KbgpPlugin, KbgpSettings};
 use bevy_pkv::PkvStore;
@@ -27,7 +28,14 @@ fn main() {
     let args = Args::parse();
 
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins);
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Gardening Gun".to_owned(),
+            resolution: WindowResolution::new(800.0, 600.0),
+            ..Default::default()
+        }),
+        ..Default::default()
+    }));
     app.insert_resource(PkvStore::new("AeonFelis", "GardeningGun"));
     app.add_plugin(EguiPlugin);
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
