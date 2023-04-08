@@ -61,6 +61,10 @@ fn initiate_planting(
         cmd.insert(LockedAxes::ROTATION_LOCKED | LockedAxes::TRANSLATION_LOCKED_X);
         cmd.insert(Growing);
         cmd.insert(YoleckBelongsToLevel);
+        cmd.insert(SolverGroups {
+            memberships: crate::solver_groups::PLANTED,
+            filters: Group::ALL,
+        });
     }
 }
 

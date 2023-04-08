@@ -88,5 +88,9 @@ fn populate_player(
         cmd.insert(CanPick);
         cmd.insert(CanCarry::default());
         cmd.insert(CanShoot::default());
+        cmd.insert(SolverGroups {
+            memberships: crate::solver_groups::PLAYER,
+            filters: crate::solver_groups::PLANTED,
+        });
     });
 }

@@ -107,7 +107,7 @@ fn handle_carrying(
         commands.entity(event.pickable).despawn_recursive();
         commands.entity(*model_entity).with_children(|commands| {
             let mut cmd = commands.spawn_empty();
-            cmd.insert(CarriedAmmunition { remaining_shots: 1 });
+            cmd.insert(CarriedAmmunition { remaining_shots: 3 });
             cmd.insert(plant_type.clone());
             cmd.insert(SceneBundle {
                 scene: asset_server.load(plant_type.scene_name()),

@@ -5,6 +5,7 @@ use bevy_yoleck::vpeol::prelude::*;
 
 use crate::animating::{AnimationsOwner, GetClipsFrom};
 use crate::editing_helpers::SnapToGrid;
+use crate::killing::Killable;
 use crate::player::IsPlayer;
 use crate::utils::sensor_events_both_ways;
 use crate::AppState;
@@ -19,6 +20,7 @@ impl Plugin for GatePlugin {
                 .insert_on_init(|| Gate { is_open: false })
                 .insert_on_init_during_editor(|| SnapToGrid)
         });
+        app.add_yoleck_edit_system(edit_gate_z_depth);
         app.yoleck_populate_schedule_mut().add_system(populate_gate);
         app.add_system(initiate_gate_opening.in_set(OnUpdate(AppState::Game)));
         app.add_system(pass_through_gate);
@@ -28,6 +30,14 @@ impl Plugin for GatePlugin {
 #[derive(Component)]
 struct Gate {
     is_open: bool,
+}
+
+#[derive(Component)]
+pub struct KeepGatesClosedWhenAlive;
+
+fn edit_gate_z_depth(mut edit: YoleckEdit<&mut Vpeol3dPosition, With<Gate>>) {
+    let Ok(mut position) = edit.get_single_mut() else { return };
+    position.0.z = -0.5;
 }
 
 fn populate_gate(mut populate: YoleckPopulate<(), With<Gate>>, asset_server: Res<AssetServer>) {
@@ -48,11 +58,16 @@ fn populate_gate(mut populate: YoleckPopulate<(), With<Gate>>, asset_server: Res
 }
 
 fn initiate_gate_opening(
-    mut query: Query<(&mut Gate, &AnimationsOwner)>,
+    killables_query: Query<&Killable, With<KeepGatesClosedWhenAlive>>,
+    mut gates_query: Query<(&mut Gate, &AnimationsOwner)>,
     mut animation_players_query: Query<&mut AnimationPlayer>,
 ) {
-    // TODO: decide if the gates need to be opened
-    for (mut gate, animations_owner) in query.iter_mut() {
+    for killable in killables_query.iter() {
+        if killable.still_alive {
+            return;
+        }
+    }
+    for (mut gate, animations_owner) in gates_query.iter_mut() {
         if gate.is_open {
             continue;
         }

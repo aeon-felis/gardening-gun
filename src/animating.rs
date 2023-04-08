@@ -12,7 +12,11 @@ impl Plugin for AnimatingPlugin {
         app.add_systems(
             (apply_actors_rotation, apply_rotate_around_axis).in_set(OnUpdate(AppState::Game)),
         );
-        app.add_systems((detect_animation_players, detect_animation_clips));
+        app.add_systems((
+            detect_animation_players,
+            detect_animation_clips,
+            set_initial_animation,
+        ));
     }
 }
 
@@ -53,6 +57,21 @@ pub struct AnimationsOwner {
 #[derive(Component)]
 pub struct GetClipsFrom(pub Handle<Gltf>);
 
+#[derive(Component)]
+pub struct InitialAnimation {
+    player_name: String,
+    clip_name: String,
+}
+
+impl InitialAnimation {
+    pub fn new(player_name: impl ToString, clip_name: impl ToString) -> Self {
+        Self {
+            player_name: player_name.to_string(),
+            clip_name: clip_name.to_string(),
+        }
+    }
+}
+
 fn detect_animation_players(
     query: Query<(Entity, &Name), Added<AnimationPlayer>>,
     parents_query: Query<&Parent>,
@@ -83,5 +102,20 @@ fn detect_animation_clips(
         for (name, clip) in gltf.named_animations.iter() {
             animation_owners.clips.insert(name.clone(), clip.clone());
         }
+    }
+}
+
+fn set_initial_animation(
+    query: Query<(Entity, &InitialAnimation, &AnimationsOwner)>,
+    mut animation_players_query: Query<&mut AnimationPlayer>,
+    mut commands: Commands,
+) {
+    for (entity, initial_animation, animations_owner) in query.iter() {
+        let Some(animation_clip) = animations_owner.clips.get(&initial_animation.clip_name) else { continue };
+        let Some(animation_player) = animations_owner.players.get(&initial_animation.player_name) else { continue };
+        let Ok(mut animation_player) = animation_players_query.get_mut(*animation_player) else { continue };
+        info!("playing");
+        animation_player.play(animation_clip.clone()).repeat();
+        commands.entity(entity).remove::<InitialAnimation>();
     }
 }
