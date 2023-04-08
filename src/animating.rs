@@ -114,7 +114,6 @@ fn set_initial_animation(
         let Some(animation_clip) = animations_owner.clips.get(&initial_animation.clip_name) else { continue };
         let Some(animation_player) = animations_owner.players.get(&initial_animation.player_name) else { continue };
         let Ok(mut animation_player) = animation_players_query.get_mut(*animation_player) else { continue };
-        info!("playing");
         animation_player.play(animation_clip.clone()).repeat();
         commands.entity(entity).remove::<InitialAnimation>();
     }
