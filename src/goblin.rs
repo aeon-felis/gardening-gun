@@ -105,7 +105,7 @@ fn handle_goblin_hitting_stuff(
     goblin_query: Query<&Killable, With<IsGoblin>>,
     bullet_query: Query<(), With<Bullet>>,
     player_query: Query<(), With<IsPlayer>>,
-    mut kill_event_writer: EventWriter<KillEvent>,
+    mut kill_events_writer: EventWriter<KillEvent>,
 ) {
     for (e1, e2) in events_both_ways(&mut reader) {
         if let Ok(goblin_killable) = goblin_query.get(e1) {
@@ -116,9 +116,9 @@ fn handle_goblin_hitting_stuff(
             continue; // not a goblin
         }
         if bullet_query.contains(e2) {
-            kill_event_writer.send(KillEvent { entity_to_kill: e1 })
+            kill_events_writer.send(KillEvent { entity_to_kill: e1 })
         } else if player_query.contains(e2) {
-            kill_event_writer.send(KillEvent { entity_to_kill: e2 })
+            kill_events_writer.send(KillEvent { entity_to_kill: e2 })
         }
     }
 }

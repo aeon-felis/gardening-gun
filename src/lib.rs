@@ -95,6 +95,7 @@ pub enum AppState {
     Editor,
     Game,
     LevelCompleted,
+    GameOver,
 }
 
 impl AppState {
@@ -107,6 +108,7 @@ impl AppState {
             AppState::Editor => false,
             AppState::Game => false,
             AppState::LevelCompleted => false,
+            AppState::GameOver => true,
         }
     }
 }

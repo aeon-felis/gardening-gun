@@ -19,6 +19,7 @@ impl Plugin for MenuPlugin {
                 menu_header,
                 main_menu.in_set(OnUpdate(AppState::MainMenu)),
                 pause_menu.in_set(OnUpdate(AppState::PauseMenu)),
+                game_over_menu.in_set(OnUpdate(AppState::GameOver)),
                 level_select_menu.in_set(OnUpdate(AppState::LevelSelectMenu)),
                 #[cfg(not(target_arch = "wasm32"))]
                 exit_button,
@@ -137,6 +138,43 @@ fn pause_menu(mut frame_ui: ResMut<FrameUi>, mut next_state: ResMut<NextState<Ap
         next_state.set(AppState::Game);
     }
     if ui.button("Retry").kbgp_navigation().clicked() {
+        next_state.set(AppState::LoadLevel);
+    }
+    if ui
+        .button("Level Select")
+        .kbgp_navigation()
+        .kbgp_initial_focus()
+        .clicked()
+    {
+        next_state.set(AppState::LevelSelectMenu);
+        ui.kbgp_clear_input();
+        ui.kbgp_set_focus_label(FocusLabel::CurrentLevel);
+    }
+    if ui.button("Main Menu").kbgp_navigation().clicked() {
+        next_state.set(AppState::MainMenu);
+        ui.kbgp_clear_input();
+        ui.kbgp_set_focus_label(FocusLabel::Start);
+    }
+}
+
+fn game_over_menu(mut frame_ui: ResMut<FrameUi>, mut next_state: ResMut<NextState<AppState>>) {
+    let Some(ui) = frame_ui.0.as_mut() else { return };
+    ui.label(
+        egui::RichText::new("Game Over")
+            .size(30.0)
+            .strong()
+            .color(egui::Color32::RED),
+    );
+    ui.add_space(20.0);
+    if ui.kbgp_user_action() == Some(MenuActionForKbgp) {
+        ui.kbgp_set_focus_label(FocusLabel::BackToMainMenu);
+    }
+    if ui
+        .button("Retry")
+        .kbgp_navigation()
+        .kbgp_initial_focus()
+        .clicked()
+    {
         next_state.set(AppState::LoadLevel);
     }
     if ui

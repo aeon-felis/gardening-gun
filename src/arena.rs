@@ -4,6 +4,7 @@ use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 
 use crate::editing_helpers::{GridSize, SnapToGrid};
+use crate::killing::KillPlayerWhenBelow;
 use crate::planting::FertileGround;
 use crate::shooting::DestroysBullets;
 
@@ -76,5 +77,6 @@ fn populate_block(
         ));
         cmd.insert(DestroysBullets);
         cmd.insert(FertileGround);
+        cmd.insert(KillPlayerWhenBelow);
     })
 }
