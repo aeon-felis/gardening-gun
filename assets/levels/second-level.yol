@@ -1,1 +1,1 @@
-[{"format_version":2,"app_format_version":0},{},[[{"type":"Block","name":""},{"GridSize":[20,1],"Vpeol3dPosition":[0.0,-12.5,0.0]}],[{"type":"Player","name":""},{"Vpeol3dPosition":[-8.5,-10.5,3.814697265625e-6]}],[{"type":"Gate","name":""},{"Vpeol3dPosition":[8.5,-10.5,-0.5]}]]]
+[{"format_version":2,"app_format_version":0},{},[[{"type":"Block","name":""},{"GridSize":[20,1],"Vpeol3dPosition":[0.0,-12.5,0.0]}],[{"type":"Gate","name":""},{"Vpeol3dPosition":[8.5,-10.5,-0.5]}],[{"type":"Player","name":""},{"Vpeol3dPosition":[-8.5,-9.5,0.0000133514404296875]}]]]

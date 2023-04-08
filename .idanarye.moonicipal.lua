@@ -7,6 +7,7 @@ T = require'idan.project.rust.bevy'(T, {
     cli_args_for_targets = {
         ['gardening-gun'] = {
             {'--level', 'test-level'},
+            {'--level', 'second-level'},
         },
     },
     extra_logging = {

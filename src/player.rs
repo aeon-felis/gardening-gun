@@ -1,18 +1,22 @@
 use std::f32::consts::PI;
+use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_tnua::{
-    TnuaFreeFallBehavior, TnuaManualTurningOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
+    TnuaAnimatingState, TnuaFreeFallBehavior, TnuaManualTurningOutput,
+    TnuaPlatformerAnimatingOutput, TnuaPlatformerBundle, TnuaPlatformerConfig,
     TnuaPlatformerControls, TnuaRapier2dSensorShape,
 };
 use bevy_yoleck::prelude::*;
 use bevy_yoleck::vpeol::prelude::*;
 
 use crate::ammunition::{CanCarry, CanPick};
-use crate::animating::ApplyRotationToChild;
+use crate::animating::{AnimationsOwner, ApplyRotationToChild, GetClipsFrom};
 use crate::editing_helpers::SnapToGrid;
+use crate::killing::Killable;
 use crate::shooting::CanShoot;
+use crate::AppState;
 
 pub struct PlayerPlugin;
 
@@ -27,6 +31,7 @@ impl Plugin for PlayerPlugin {
         });
         app.yoleck_populate_schedule_mut()
             .add_system(populate_player);
+        app.add_system(animate_player.in_set(OnUpdate(AppState::Game)));
     }
 }
 
@@ -49,6 +54,8 @@ fn populate_player(
                 .id();
             cmd.add_child(child);
             cmd.insert(ApplyRotationToChild(child));
+            cmd.insert(AnimationsOwner::default());
+            cmd.insert(GetClipsFrom(asset_server.load("Player.glb")));
         }
         cmd.insert(VisibilityBundle::default());
         cmd.insert(RigidBody::Dynamic);
@@ -61,7 +68,7 @@ fn populate_player(
                 full_jump_height: 4.0,
                 up: Vec3::Y,
                 forward: Vec3::X,
-                float_height: 1.5,
+                float_height: 2.0,
                 cling_distance: 1.0,
                 spring_strengh: 400.0,
                 spring_dampening: 1.4,
@@ -92,5 +99,74 @@ fn populate_player(
             memberships: crate::solver_groups::PLAYER,
             filters: crate::solver_groups::PLANTED,
         });
+        cmd.insert(Killable::default());
+        cmd.insert(TnuaAnimatingState::<PlayerAnimationState>::default());
+        cmd.insert(TnuaPlatformerAnimatingOutput::default());
     });
+}
+
+pub enum PlayerAnimationState {
+    Standing,
+    Running(f32),
+    Jumping,
+}
+
+#[allow(clippy::type_complexity)]
+fn animate_player(
+    mut query: Query<(
+        &mut TnuaAnimatingState<PlayerAnimationState>,
+        &TnuaPlatformerAnimatingOutput,
+        &Killable,
+        &AnimationsOwner,
+    )>,
+    mut animation_players_query: Query<&mut AnimationPlayer>,
+) {
+    for (mut animating_state, animating_output, killable, animations_owner) in query.iter_mut() {
+        if !killable.still_alive {
+            // Death animation is handled elsewhere
+            continue;
+        }
+        let Some(animation_player) = animations_owner.players.get("Armature") else { continue };
+        let Ok(mut animation_player) = animation_players_query.get_mut(*animation_player) else { continue };
+        match animating_state.update_by_discriminant({
+            if animating_output.jumping_velocity.is_some() {
+                PlayerAnimationState::Jumping
+            } else {
+                let speed = animating_output.running_velocity.length();
+                if 0.01 < speed {
+                    PlayerAnimationState::Running(0.1 * speed)
+                } else {
+                    PlayerAnimationState::Standing
+                }
+            }
+        }) {
+            bevy_tnua::TnuaAnimatingStateDirective::Maintain { state } => {
+                if let PlayerAnimationState::Running(speed) = state {
+                    animation_player.set_speed(*speed);
+                }
+            }
+            bevy_tnua::TnuaAnimatingStateDirective::Alter {
+                old_state: _,
+                state,
+            } => match state {
+                PlayerAnimationState::Standing => {
+                    let Some(clip) = animations_owner.clips.get("Standing") else { continue };
+                    animation_player
+                        .play_with_transition(clip.clone(), Duration::from_secs_f32(0.25))
+                        .set_speed(1.0);
+                }
+                PlayerAnimationState::Running(speed) => {
+                    let Some(clip) = animations_owner.clips.get("Running") else { continue };
+                    animation_player
+                        .play(clip.clone())
+                        .repeat()
+                        .set_speed(*speed);
+                }
+                PlayerAnimationState::Jumping => {
+                    let Some(clip) = animations_owner.clips.get("Jumping") else { continue };
+                    animation_player.play(clip.clone()).set_speed(3.0);
+                }
+            },
+        }
+    }
 }

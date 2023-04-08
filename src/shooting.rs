@@ -74,7 +74,7 @@ fn apply_shooting(
         cmd.insert(SceneBundle {
             scene: asset_server.load("Bullet.glb#Scene0"),
             transform: Transform::from_translation(
-                shooter_transform.translation() + event.direction,
+                shooter_transform.translation() + event.direction + 0.4 * Vec3::Y,
             ),
             ..Default::default()
         });
