@@ -9,10 +9,11 @@ pub struct GardeningGunCameraPlugin;
 impl Plugin for GardeningGunCameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup_camera);
-        app.add_systems((
-                reset_camera_on_player_position,
-                camera_track_player,
-        ).chain().in_set(OnUpdate(AppState::Game)));
+        app.add_systems(
+            (reset_camera_on_player_position, camera_track_player)
+                .chain()
+                .in_set(OnUpdate(AppState::Game)),
+        );
     }
 }
 
@@ -126,10 +127,7 @@ fn reset_camera_on_player_position(
 
     for mut tracking in cameras_query.iter_mut() {
         let tracking = tracking.as_mut();
-        for moving_point in [
-            &mut tracking.camera_at,
-            &mut tracking.looking_at,
-        ] {
+        for moving_point in [&mut tracking.camera_at, &mut tracking.looking_at] {
             moving_point.position = player_position_2d;
             moving_point.velocity = Vec2::ZERO;
         }
